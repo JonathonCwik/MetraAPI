@@ -1,1 +1,5 @@
 MetraAPI/obj/
+MetraAPI/bin/
+packages/
+MetraAPI.Tests/bin/
+MetraAPI.Tests/obj/
