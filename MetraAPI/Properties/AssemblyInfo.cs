@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("MetraAPI")]
 [assembly: AssemblyDescription("Simple .NET API for the Chicagoland Metra.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("SMASH1337")]
 [assembly: AssemblyProduct("MetraAPI")]
 [assembly: AssemblyCopyright("Copyright ©  2014")]
 [assembly: AssemblyTrademark("")]
