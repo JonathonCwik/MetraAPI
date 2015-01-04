@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using MetraAPI.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using HtmlAgilityPack;
 
 namespace MetraAPI
 {
@@ -15,9 +16,52 @@ namespace MetraAPI
     {
         private const string GET_STATIONS_FROM_LINE_URL = "http://metrarail.com/content/metra/wap/en/home/RailTimeTracker/jcr:content/trainTracker.get_stations_from_line.json?";
         private const string GET_TRAIN_DATA_URL = "http://metrarail.com/content/metra/en/home/jcr:content/trainTracker.get_train_data.json?";
+        private const string GET_LINE_AND_STATION_ID_URL = "http://metrarail.com/content/metra/en/home/jcr:content/trainTracker.lataexport.html";
 
         private enum Methods { get_stations_from_line, get_train_data };
         private enum ReturnType { json };
+
+        public static List<Line> GetLineAndStationIds()
+        {
+            var lines = new List<Line>();
+
+            var request = WebRequest.Create(GET_LINE_AND_STATION_ID_URL);
+            var response = GetResponseData(request);
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(response);
+            doc.DocumentNode.SelectSingleNode("script").Remove();
+            var content = doc.DocumentNode.InnerHtml.Trim();
+            string[] stringSeparators = new string[] { "<br>" };
+            var lineStationArray = content.Split(stringSeparators, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var lS in lineStationArray)
+            {
+                var split = lS.Split(',');
+                if (lines.Count(l => l.Id == split[0]) == 0)
+                {
+                    lines.Add(
+                        new Line
+                        {
+                            Id = split[0],
+                            Stations = new List<Station> 
+                            { 
+                                new Station { Id = split[1] }
+                            }
+                        }
+                    );
+                }
+                else
+                {
+                    lines.Single(l => l.Id == split[0])
+                        .Stations.Add(
+                        new Station { Id = split[1] }
+                    );
+                }
+            }
+
+            return lines.OrderBy(l => l.Id).ToList();
+        }
 
         public static List<Station> GetStationsForLine(Line line)
         {

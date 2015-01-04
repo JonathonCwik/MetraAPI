@@ -39,5 +39,13 @@ namespace MetraAPI.Tests
 
             Assert.IsNotEmpty(trainBatch);
         }
+
+        [Test]
+        public void GetLineAndStationIds_All_ReturnsLineAndStationIds()
+        {
+            var linesAndStations = MetraAPI.GetLineAndStationIds();
+
+            Assert.IsNotEmpty(linesAndStations);
+        }
     }
 }
