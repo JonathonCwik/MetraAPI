@@ -21,6 +21,10 @@ namespace MetraAPI
         private enum Methods { get_stations_from_line, get_train_data };
         private enum ReturnType { json };
 
+        /// <summary>
+        /// Retrieves List of Lines and Stations with Ids populated
+        /// </summary>
+        /// <returns></returns>
         public static List<Line> GetLineAndStationIds()
         {
             var lines = new List<Line>();
@@ -63,12 +67,27 @@ namespace MetraAPI
             return lines.OrderBy(l => l.Id).ToList();
         }
 
+        /// <summary>
+        /// Retrieve stations for specific line
+        /// </summary>
+        /// <param name="line">Line</param>
+        /// <returns>List of Stations for Line</returns>
         public static List<Station> GetStationsForLine(Line line)
         {
+            return GetStationsForLine(line.Id);
+        }
+        
+        /// <summary>
+        /// Retrieve stations for specific line
+        /// </summary>
+        /// <param name="lineId">Line Id (e.g. UP-NW, ME)</param>
+        /// <returns></returns>
+        public static List<Station> GetStationsForLine(string lineId)
+        {
             var url = GET_STATIONS_FROM_LINE_URL;
-            
+
             url = AddParamToUrl(url, "trackerNumber", "0");
-            url = AddParamToUrl(url, "trainLineId", line.Id);
+            url = AddParamToUrl(url, "trainLineId", lineId);
 
             var request = WebRequest.Create(url);
             var response = GetResponseData(request);
@@ -90,31 +109,49 @@ namespace MetraAPI
             return stations;
         }
 
-        public static List<Station> GetStationsForLine(string lineId)
-        {
-            return GetStationsForLine(
-                new Line
-                {
-                    Id = lineId
-                }
-            );
-        }
-
+        /// <summary>
+        /// Gets Next 5 Trains for line, origin station, and destination station
+        /// </summary>
+        /// <param name="line">Target Line</param>
+        /// <param name="originStation">Origin Station</param>
+        /// <param name="destinationStation">Destination Station</param>
+        /// <returns>Batch of Trains</returns>
         public static List<Train> GetNextTrainBatch(Line line, Station originStation, Station destinationStation)
         {
             return GetNextTrainBatch(line.Id, originStation.Id, destinationStation.Id);
         }
 
+        /// <summary>
+        /// Gets Next 5 Trains for line, origin station, and destination station
+        /// </summary>
+        /// <param name="lineId">Target Line's Id (e.g. UP-W, UP-NW, etc)</param>
+        /// <param name="originStation">Origin Station</param>
+        /// <param name="destinationStation">Destination Station</param>
+        /// <returns>Batch of Trains</returns>
         public static List<Train> GetNextTrainBatch(string lineId, Station originStation, Station destinationStation)
         {
             return GetNextTrainBatch(lineId, originStation.Id, destinationStation.Id);
         }
 
+        /// <summary>
+        /// Gets Next 5 Trains for line, origin station, and destination station
+        /// </summary>
+        /// <param name="line">Target Line</param>
+        /// <param name="originStationId">Origin Station Id</param>
+        /// <param name="destinationStationId">Destination Station Id</param>
+        /// <returns></returns>
         public static List<Train> GetNextTrainBatch(Line line, string originStationId, string destinationStationId)
         {
             return GetNextTrainBatch(line.Id, originStationId, destinationStationId);
         }
 
+        /// <summary>
+        /// Gets Next 5 Trains for line, origin station, and destination station
+        /// </summary>
+        /// <param name="lineId">Target Line Id</param>
+        /// <param name="originStationId">Origin Station Id</param>
+        /// <param name="destinationStationId">Destination Station Id</param>
+        /// <returns></returns>
         public static List<Train> GetNextTrainBatch(string lineId, string originStationId, string destinationStationId)
         {
             var url = GET_TRAIN_DATA_URL;
