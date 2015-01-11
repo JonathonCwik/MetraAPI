@@ -1,0 +1,82 @@
+// OLD CRAP
+
+Get Stations for Line:
+
+GET http://metrarail.com/content/metra/wap/en/home/RailTimeTracker/jcr:content/trainTracker.get_stations_from_line.json?trackerNumber=0&trainLineId=UP-W HTTP/1.1
+Host: metrarail.com
+Connection: keep-alive
+
+Get Train Data:
+
+GET http://metrarail.com/content/metra/en/home/jcr:content/trainTracker.get_train_data.json?line=UP-W&origin=VILLAPARK&destination=OTC HTTP/1.1
+Host: metrarail.com
+Connection: keep-alive
+
+// NEW SHINY STUFF!
+
+Get Lines:
+
+GET http://12.205.200.243/AJAXTrainTracker.svc/GetCorridorLookup HTTP/1.1
+Content-Type: application/json
+Connection: Keep-Alive
+Host: 12.205.200.243
+
+Get All Stations:
+
+GET http://12.205.200.243/AJAXTrainTracker.svc/GetStationLookup HTTP/1.1
+Content-Type: application/json
+Connection: Keep-Alive
+Host: 12.205.200.243
+
+Get Lines and Stations:
+
+GET http://12.205.200.243/AJAXTrainTracker.svc/GetCorridorStationLookup HTTP/1.1
+Content-Type: application/json
+Host: 12.205.200.243
+Connection: Keep-Alive
+
+Get Trains (Looks to get the last or first train of the day?):
+
+GET http://12.205.200.243/AJAXTrainTracker.svc/GetTrains HTTP/1.1
+Content-Type: application/json
+Connection: Keep-Alive
+Host: 12.205.200.243
+
+Get Train Delays:
+
+GET http://12.205.200.243/AJAXTrainTracker.svc/GetTrainDelays HTTP/1.1
+Content-Type: application/json
+Connection: Keep-Alive
+Host: 12.205.200.243
+
+Get Acquity Train Data (Like this one better):
+
+POST http://12.205.200.243/AJAXTrainTracker.svc/GetAcquityTrainData HTTP/1.1
+Content-Type: application/json
+Host: 12.205.200.243
+Connection: Keep-Alive
+
+{"stationRequest":{"Corridor":"UP-W","Destination":"OTC","Origin":"ELMHURST","timestamp":"/Date(1420908964465)/"}}
+
+Get Train Data:
+
+POST http://12.205.200.243/AJAXTrainTracker.svc/GetTrainData HTTP/1.1
+Content-Type: application/json
+Host: 12.205.200.243
+Connection: Keep-Alive
+
+{"stationRequest":{"Corridor":"UP-W","Destination":"OTC","Origin":"ELMHURST","timestamp":"/Date(1420908964465)/"}}
+
+Get Trains By Corridor:
+
+GET http://12.205.200.243/AJAXTrainTracker.svc/GetTrainsByCorridors?Corridor=UP%20West HTTP/1.1
+Content-Type: application/json
+Host: 12.205.200.243
+Connection: Keep-Alive
+
+Get Train Schedule:
+
+GET http://12.205.200.243/AJAXTrainTracker.svc/GetSchedules?Corridor=UP%20West&TrainNumber=509 HTTP/1.1
+Content-Type: application/json
+Host: 12.205.200.243
+Connection: Keep-Alive

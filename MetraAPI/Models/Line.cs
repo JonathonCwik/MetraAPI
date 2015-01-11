@@ -7,8 +7,11 @@ namespace MetraAPI.Models
 {
     public class Line
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
+        public string LookupName { get; set; }
+        public string CorridorName { get; set; }
+        public string Abbrevation { get; set; }
+        public string CorridorGroup { get; set; }
+        public bool Shutdown { get; set; }
         public List<Station> Stations { get; set; }
     }
 }
