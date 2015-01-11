@@ -5,7 +5,12 @@ using System.Text;
 
 namespace MetraAPI.Models
 {
-    class TrainCurrent
+    public class TrainCurrent
     {
+        public string CorriderName { get; set; }
+        public Station Station { get; set; }
+        public int MITPositionM { get; set; }
+        public int TrainNumber { get; set; }
+
     }
 }

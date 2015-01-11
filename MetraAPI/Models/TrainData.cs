@@ -15,6 +15,5 @@ namespace MetraAPI.Models
         public DateTime Timestamp { get; set; }
         public int DateAge { get; set; }
         public bool IsDuplicate { get; set; }
-        public RunState RunState { get; set; }
     }
 }
