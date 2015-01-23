@@ -49,7 +49,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LineHandler.cs" />
     <Compile Include="MetraAPI.cs" />
     <Compile Include="Models\Line.cs" />
     <Compile Include="Models\Station.cs" />

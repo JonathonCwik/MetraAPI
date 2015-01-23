@@ -16,7 +16,7 @@ namespace MetraAPI.Models
         public DateTime EstStopTime { get; set; }
         public bool WasModified { get; set; }
         public int StopType { get; set; }
-        public Station Station { get; set; }
+        public TrainStation Station { get; set; }
         public Line Line { get; set; }
         public bool IsDuplicate { get; set; }
         public int RunState { get; set; }

@@ -12,6 +12,6 @@ namespace MetraAPI.Models
         public string Abbrevation { get; set; }
         public string CorridorGroup { get; set; }
         public bool Shutdown { get; set; }
-        public List<Station> Stations { get; set; }
+        public List<TrainStation> Stations = new List<TrainStation>();
     }
 }

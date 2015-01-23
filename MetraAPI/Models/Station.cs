@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace MetraAPI.Models
 {
-    public class Station
+    public class TrainStation
     {
-        public string LookupName { get; set; }
+        public string CorridorName { get; set; }
+        public string Corridor { get; set; }
+        public string Station { get; set; }
         public string StationName { get; set; }
-
-        public int Order { get; set; }
     }
 }

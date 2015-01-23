@@ -7,7 +7,7 @@ namespace MetraAPI.Models
 {
     public class TrainData
     {
-        public Station DepartingStation { get; set; }
+        public TrainStation DepartingStation { get; set; }
         public int TrainNumber { get; set; }
         public DateTime ScheduledDepartureTime { get; set; }
         public DateTime EstimatedDepartureTime { get; set; }

@@ -12,40 +12,26 @@ namespace MetraAPI.Tests
     public class ApiIntegrationTests
     {
         [Test]
-        public void GetStationForLine_UPW_ReturnsUPWStops()
+        public void GetLines_AllLines_HasLinesNoStations()
         {
-            var stations = MetraAPI.GetStationsForLine("UP-W");
+            var lines = MetraAPI.GetLines();
 
-            Assert.That(stations.Count() > 0);
+            Assert.IsNotEmpty(lines);
+            Assert.That(lines.Count(l => l.Stations.Count > 0) == 0);
         }
 
         [Test]
-        public void UpdateAllStationsForAllLines_UpdatesAllStations()
+        public void GetLinesAndStations_AllLinesAndStations_HasLinesAndStations()
         {
-            LineHandler.UpdateAllStationsForAllLines();
+            var lines = MetraAPI.GetLinesAndStations();
 
-            var lines = LineHandler.GetAllLines();
-
+            Assert.IsNotEmpty(lines);
             foreach (var line in lines)
             {
-                Assert.That(line.Stations.Count > 0);
+                Assert.IsNotEmpty(line.Stations);
             }
         }
 
-        [Test]
-        public void GetNextTrainBatch_UPW_VillaPark_OTC_Success()
-        {
-            var trainBatch = MetraAPI.GetNextTrainBatch("UP-W", "VILLAPARK", "OTC");
 
-            Assert.IsNotEmpty(trainBatch);
-        }
-
-        [Test]
-        public void GetLineAndStationIds_All_ReturnsLineAndStationIds()
-        {
-            var linesAndStations = MetraAPI.GetLineAndStationIds();
-
-            Assert.IsNotEmpty(linesAndStations);
-        }
     }
 }
