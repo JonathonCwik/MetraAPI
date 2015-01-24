@@ -45,11 +45,11 @@ namespace MetraAPI.Tests
         {
             var lines = MetraAPI.GetLinesAndStations();
 
-            var UPWLine = lines.Single(l => l.LookupName == "up-w");
-            var vpStation = UPWLine.Stations.Single(s => s.Station == "VILLAPARK");
-            var ogilvyStation = UPWLine.Stations.Single(s => s.Station == "OTC");
+            var upwLine = lines.Single(l => l.LookupName == "up-w");
+            var vpStation = upwLine.Stations.Single(s => s.Station == "VILLAPARK");
+            var ogilvyStation = upwLine.Stations.Single(s => s.Station == "OTC");
 
-            Assert.IsNotEmpty(MetraAPI.GetTrainData(UPWLine, vpStation, ogilvyStation));
+            Assert.IsNotEmpty(MetraAPI.GetTrainData(upwLine, vpStation, ogilvyStation));
         }
 
         [Test]
@@ -62,6 +62,42 @@ namespace MetraAPI.Tests
         public void GetTrainNumbersForLine_UPW_ReturnsTrainNumbers()
         {
             Assert.IsNotEmpty(MetraAPI.GetTrainNumbersForLine("UP West"));
+        }
+
+        [Test]
+        public void GetTrainNumbersForLine_UPWLineObject_ReturnsTrainNumbers()
+        {
+            var lines = MetraAPI.GetLines();
+
+            var upwLine = lines.Single(l => l.LookupName == "up-w");
+
+            var trainNumbers = MetraAPI.GetTrainNumbersForLine(upwLine);
+
+            Assert.IsNotEmpty(trainNumbers);
+        }
+
+        [Test]
+        public void GetTrainSchedule_ValidTrainNumberStringLine_ReturnsSchedule()
+        {
+            var trainNumbers = MetraAPI.GetTrainNumbersForLine("UP West");
+
+            var trainSchedule = MetraAPI.GetTrainSchedule("UP West", trainNumbers[0]);
+
+            Assert.IsNotEmpty(trainSchedule);
+        }
+
+        [Test]
+        public void GetTrainSchedule_ValidTrainNumberObjectLine_ReturnsSchedule()
+        {
+            var lines = MetraAPI.GetLines();
+
+            var upwLine = lines.Single(l => l.LookupName == "up-w");
+
+            var trainNumbers = MetraAPI.GetTrainNumbersForLine(upwLine);
+
+            var trainSchedule = MetraAPI.GetTrainSchedule(upwLine, trainNumbers[0]);
+
+            Assert.IsNotEmpty(trainSchedule);
         }
 
     }

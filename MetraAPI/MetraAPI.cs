@@ -101,6 +101,13 @@ namespace MetraAPI
             return delays;
         }
 
+        /// <summary>
+        /// Get train data for next batch of trains from origin to destination
+        /// </summary>
+        /// <param name="line">Line (e.g. UP-W)</param>
+        /// <param name="origin">Origin Station (e.g. VILLAPARK)</param>
+        /// <param name="destination">Destination Station (e.g. OTC)</param>
+        /// <returns></returns>
         public static List<TrainData> GetTrainData(string line, string origin, string destination)
         {
             if (line == null || destination == null || origin == null)
@@ -155,11 +162,23 @@ namespace MetraAPI
             return trainData;
         }
 
+        /// <summary>
+        /// Get train data for next batch of trains from origin to destination
+        /// </summary>
+        /// <param name="line">Line</param>
+        /// <param name="origin">Origin Station</param>
+        /// <param name="destination">Destination Station</param>
+        /// <returns></returns>
         public static List<TrainData> GetTrainData(Line line, TrainStation origin, TrainStation destination)
         {
             return GetTrainData(line.LookupName, origin.StationName, destination.StationName);
         }
 
+        /// <summary>
+        /// Retrieves train numbers for line
+        /// </summary>
+        /// <param name="line">Line Name (e.g. UP West)</param>
+        /// <returns>Array of Train Numbers</returns>
         public static int[] GetTrainNumbersForLine(string line)
         {
             var url = AddParamToUrl(serviceUrl + "GetTrainsByCorridors?", "Corridor", line);
@@ -171,6 +190,52 @@ namespace MetraAPI
 
             return JsonConvert.DeserializeObject<int[]>(resultObj["d"].Value);
         }
+
+        /// <summary>
+        /// Retrieves train numbers for line
+        /// </summary>
+        /// <param name="line">Line</param>
+        /// <returns>Array of Train Numbers</returns>
+        public static int[] GetTrainNumbersForLine(Line line)
+        {
+            if (String.IsNullOrEmpty(line.CorridorName))
+            {
+                throw new ArgumentException("Line CorridorName cannot be null or empty. Either populate it by hand or retrieve the line via the api");
+            }
+            return GetTrainNumbersForLine(line.CorridorName);
+        }
+
+        /// <summary>
+        /// Retrieves train schedule
+        /// </summary>
+        /// <param name="line">Line Name (e.g. UP West)</param>
+        /// <param name="trainNum">Train Number</param>
+        /// <returns>Train Schedule</returns>
+        public static List<TrainSchedule> GetTrainSchedule(string line, int trainNum)
+        {
+            var url = serviceUrl + "GetSchedules?";
+            url = AddParamToUrl(url, "TrainNumber", trainNum.ToString());
+            url = AddParamToUrl(url, "Corridor", line);
+
+            var request = WebRequest.Create(url);
+            var response = GetResponseData(request);
+
+            dynamic resultObj = JsonConvert.DeserializeObject(response);
+
+            return JsonConvert.DeserializeObject<List<TrainSchedule>>(resultObj["d"].Value);
+        }
+
+        public static List<TrainSchedule> GetTrainSchedule(Line line, int trainNum)
+        {
+            if (String.IsNullOrEmpty(line.CorridorName))
+            {
+                throw new ArgumentException("Line CorridorName cannot be null or empty. Either populate it by hand or retrieve the line via the api");
+            }
+
+            return GetTrainSchedule(line.CorridorName, trainNum);
+        }
+
+        #region Helper Methods
 
         private static string AddParamToUrl(string url, string key, string value)
         {
@@ -224,5 +289,7 @@ namespace MetraAPI
 
             return responseFromServer;
         }
+
+        #endregion
     }
 }
