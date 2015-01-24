@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MetraAPI.cs" />
+    <Compile Include="Models\GetTrainDataRequest.cs" />
     <Compile Include="Models\Line.cs" />
     <Compile Include="Models\Station.cs" />
     <Compile Include="Models\Train.cs" />

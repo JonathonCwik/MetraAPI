@@ -7,7 +7,7 @@ namespace MetraAPI.Models
 {
     public class TrainData
     {
-        public TrainStation DepartingStation { get; set; }
+        public string DepartingStation { get; set; }
         public int TrainNumber { get; set; }
         public DateTime ScheduledDepartureTime { get; set; }
         public DateTime EstimatedDepartureTime { get; set; }
@@ -15,5 +15,6 @@ namespace MetraAPI.Models
         public DateTime Timestamp { get; set; }
         public int DateAge { get; set; }
         public bool IsDuplicate { get; set; }
+        public int RunState { get; set; }
     }
 }

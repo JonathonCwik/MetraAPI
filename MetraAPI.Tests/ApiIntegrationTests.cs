@@ -32,6 +32,37 @@ namespace MetraAPI.Tests
             }
         }
 
+        [Test]
+        public void GetAllTrainDelays_NoParams_HasDelays()
+        {
+            var delays = MetraAPI.GetAllTrainDelays();
+
+            Assert.IsNotEmpty(delays);
+        }
+
+        [Test]
+        public void GetTrainData_UPWVillaParkToOgilvyObjects_ReturnsTrainData()
+        {
+            var lines = MetraAPI.GetLinesAndStations();
+
+            var UPWLine = lines.Single(l => l.LookupName == "up-w");
+            var vpStation = UPWLine.Stations.Single(s => s.Station == "VILLAPARK");
+            var ogilvyStation = UPWLine.Stations.Single(s => s.Station == "OTC");
+
+            Assert.IsNotEmpty(MetraAPI.GetTrainData(UPWLine, vpStation, ogilvyStation));
+        }
+
+        [Test]
+        public void GetTrainData_UPWVillaParkToOgilvyStrings_ReturnsTrainData()
+        {
+            Assert.IsNotEmpty(MetraAPI.GetTrainData("up-w", "VILLAPARK", "OTC"));
+        }
+
+        [Test]
+        public void GetTrainNumbersForLine_UPW_ReturnsTrainNumbers()
+        {
+            Assert.IsNotEmpty(MetraAPI.GetTrainNumbersForLine("UP West"));
+        }
 
     }
 }
