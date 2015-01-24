@@ -53,8 +53,6 @@
     <Compile Include="Models\GetTrainDataRequest.cs" />
     <Compile Include="Models\Line.cs" />
     <Compile Include="Models\Station.cs" />
-    <Compile Include="Models\Train.cs" />
-    <Compile Include="Models\TrainCurrent.cs" />
     <Compile Include="Models\TrainData.cs" />
     <Compile Include="Models\TrainDelay.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
