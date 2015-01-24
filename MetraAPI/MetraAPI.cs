@@ -9,189 +9,261 @@ using MetraAPI.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using HtmlAgilityPack;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace MetraAPI
 {
     public static class MetraAPI
     {
-        private const string GET_STATIONS_FROM_LINE_URL = "http://metrarail.com/content/metra/wap/en/home/RailTimeTracker/jcr:content/trainTracker.get_stations_from_line.json?";
-        private const string GET_TRAIN_DATA_URL = "http://metrarail.com/content/metra/en/home/jcr:content/trainTracker.get_train_data.json?";
-        private const string GET_LINE_AND_STATION_ID_URL = "http://metrarail.com/content/metra/en/home/jcr:content/trainTracker.lataexport.html";
-
-        private enum Methods { get_stations_from_line, get_train_data };
-        private enum ReturnType { json };
+        private const string serviceUrl = "http://12.205.200.243/AJAXTrainTracker.svc/";
 
         /// <summary>
-        /// Retrieves List of Lines and Stations with Ids populated
+        /// Retrieves List of Lines
         /// </summary>
         /// <returns></returns>
-        public static List<Line> GetLineAndStationIds()
+        public static List<Line> GetLines()
         {
             var lines = new List<Line>();
 
-            var request = WebRequest.Create(GET_LINE_AND_STATION_ID_URL);
+            var request = WebRequest.Create(serviceUrl + "GetCorridorLookup");
             var response = GetResponseData(request);
 
-            HtmlDocument doc = new HtmlDocument();
-            doc.LoadHtml(response);
-            doc.DocumentNode.SelectSingleNode("script").Remove();
-            var content = doc.DocumentNode.InnerHtml.Trim();
-            string[] stringSeparators = new string[] { "<br>" };
-            var lineStationArray = content.Split(stringSeparators, StringSplitOptions.RemoveEmptyEntries);
+            dynamic resultObj = JsonConvert.DeserializeObject(response);
 
-            foreach (var lS in lineStationArray)
-            {
-                var split = lS.Split(',');
-                if (lines.Count(l => l.Id == split[0]) == 0)
-                {
-                    lines.Add(
-                        new Line
-                        {
-                            Id = split[0],
-                            Stations = new List<Station> 
-                            { 
-                                new Station { Id = split[1] }
-                            }
-                        }
-                    );
-                }
-                else
-                {
-                    lines.Single(l => l.Id == split[0])
-                        .Stations.Add(
-                        new Station { Id = split[1] }
-                    );
-                }
-            }
-
-            return lines.OrderBy(l => l.Id).ToList();
+            return JsonConvert.DeserializeObject<List<Line>>(resultObj["d"].Value);
         }
 
         /// <summary>
-        /// Retrieve stations for specific line
+        /// Retrieves List of Lines and Stations
+        /// </summary>
+        /// <returns></returns>
+        public static List<Line> GetLinesAndStations()
+        {
+            var lines = new List<Line>();
+
+            var request = WebRequest.Create(serviceUrl + "GetCorridorLookup");
+            var response = GetResponseData(request);
+
+            dynamic resultObj = JsonConvert.DeserializeObject(response);
+
+            lines = JsonConvert.DeserializeObject<List<Line>>(resultObj["d"].Value);
+
+            var allStations = GetAllStations();
+
+            foreach (var station in allStations)
+            {
+                var stations = lines.Single(l => l.CorridorName == station.CorridorName).Stations;
+
+                if (stations.Count(s => s.StationName == station.StationName) == 0)
+                {
+                    stations.Add(station);
+                }
+            }
+
+            return lines;
+        }
+
+        /// <summary>
+        /// Retrieves All Stations
+        /// </summary>
+        /// <returns></returns>
+        public static List<TrainStation> GetAllStations()
+        {
+            var stations = new List<TrainStation>();
+
+            var request = WebRequest.Create(serviceUrl + "GetCorridorStationLookup");
+            var response = GetResponseData(request);
+
+            dynamic resultObj = JsonConvert.DeserializeObject(response);
+
+            return JsonConvert.DeserializeObject<List<TrainStation>>(resultObj["d"].Value);
+        }
+
+        /// <summary>
+        /// Retrieves all trains delay info
+        /// </summary>
+        /// <returns></returns>
+        public static List<TrainDelay> GetAllTrainDelays()
+        {
+            var delays = new List<TrainDelay>();
+
+            var request = WebRequest.Create(serviceUrl + "GetTrainDelays");
+            var response = GetResponseData(request);
+
+            dynamic resultObj = JsonConvert.DeserializeObject(response);
+
+            delays = JsonConvert.DeserializeObject<List<TrainDelay>>(resultObj["d"].Value);
+
+            // DateTimes are off by 6 hours
+            delays.ForEach(d => d.LastUpdate = d.LastUpdate.AddHours(-6));
+            delays.ForEach(d => d.Timestamp = d.Timestamp.AddHours(-6));
+
+            return delays;
+        }
+
+        /// <summary>
+        /// Get train data for next batch of trains from origin to destination
+        /// </summary>
+        /// <param name="line">Line (e.g. UP-W)</param>
+        /// <param name="origin">Origin Station (e.g. VILLAPARK)</param>
+        /// <param name="destination">Destination Station (e.g. OTC)</param>
+        /// <returns></returns>
+        public static List<TrainData> GetTrainData(string line, string origin, string destination)
+        {
+            if (line == null || destination == null || origin == null)
+            {
+                throw new ArgumentNullException("Line LookupName, Origin Station, and Destination Station are all required fields");
+            }
+
+            var trainData = new List<TrainData>();
+
+            var request = WebRequest.Create(serviceUrl + "GetAcquityTrainData");
+            request.Method = "POST";
+
+            var trainDataRequest = new GetTrainDataRequest
+            {
+                stationRequest = new StationRequest
+                {
+                    Corridor = line,
+                    Destination = destination,
+                    Origin = origin
+                }
+            };
+
+            request = ConvertToPostRequest(request,
+                trainDataRequest,
+                "application/json");
+
+            var response = GetResponseData(request);
+
+            dynamic resultObj = JsonConvert.DeserializeObject(response);
+
+            resultObj = JsonConvert.DeserializeObject(resultObj["d"].Value);
+
+            foreach (var tData in resultObj)
+            {
+                if (tData.Name.Contains("train"))
+                {
+                    trainData.Add(new TrainData
+                    {
+                        DepartingStation = tData.Value["dpt_station"],
+                        TrainNumber = tData.Value["train_num"],
+                        ScheduledDepartureTime = ((DateTime)tData.Value["scheduled_dpt_time"]).AddHours(-6),
+                        EstimatedDepartureTime = ((DateTime)tData.Value["estimated_dpt_time"]).AddHours(-6),
+                        IsModified = tData.Value["is_modified"],
+                        Timestamp = ((DateTime)tData.Value["timestamp"]).AddHours(-6),
+                        DateAge = tData.Value["DateAge"],
+                        IsDuplicate = tData.Value["is_duplicate"],
+                        RunState = tData.Value["RunState"]
+                    });
+                }
+            }
+
+            return trainData;
+        }
+
+        /// <summary>
+        /// Get train data for next batch of trains from origin to destination
         /// </summary>
         /// <param name="line">Line</param>
-        /// <returns>List of Stations for Line</returns>
-        public static List<Station> GetStationsForLine(Line line)
-        {
-            return GetStationsForLine(line.Id);
-        }
-        
-        /// <summary>
-        /// Retrieve stations for specific line
-        /// </summary>
-        /// <param name="lineId">Line Id (e.g. UP-NW, ME)</param>
+        /// <param name="origin">Origin Station</param>
+        /// <param name="destination">Destination Station</param>
         /// <returns></returns>
-        public static List<Station> GetStationsForLine(string lineId)
+        public static List<TrainData> GetTrainData(Line line, TrainStation origin, TrainStation destination)
         {
-            var url = GET_STATIONS_FROM_LINE_URL;
+            return GetTrainData(line.LookupName, origin.StationName, destination.StationName);
+        }
 
-            url = AddParamToUrl(url, "trackerNumber", "0");
-            url = AddParamToUrl(url, "trainLineId", lineId);
+        /// <summary>
+        /// Retrieves train numbers for line
+        /// </summary>
+        /// <param name="line">Line Name (e.g. UP West)</param>
+        /// <returns>Array of Train Numbers</returns>
+        public static int[] GetTrainNumbersForLine(string line)
+        {
+            var url = AddParamToUrl(serviceUrl + "GetTrainsByCorridors?", "Corridor", line);
 
             var request = WebRequest.Create(url);
             var response = GetResponseData(request);
 
-            dynamic responseObj = JsonConvert.DeserializeObject(response);
+            dynamic resultObj = JsonConvert.DeserializeObject(response);
 
-            var stations = new List<Station>();
+            return JsonConvert.DeserializeObject<int[]>(resultObj["d"].Value);
+        }
 
-            foreach (var station in responseObj.stations)
+        /// <summary>
+        /// Retrieves train numbers for line
+        /// </summary>
+        /// <param name="line">Line</param>
+        /// <returns>Array of Train Numbers</returns>
+        public static int[] GetTrainNumbersForLine(Line line)
+        {
+            if (String.IsNullOrEmpty(line.CorridorName))
             {
-                stations.Add(new Station
-                {
-                    Id = station.Value["id"],
-                    Name = station.Value["name"],
-                    Order = int.Parse(station.Name)
-                });
+                throw new ArgumentException("Line CorridorName cannot be null or empty. Either populate it by hand or retrieve the line via the api");
             }
-
-            return stations;
+            return GetTrainNumbersForLine(line.CorridorName);
         }
 
         /// <summary>
-        /// Gets Next 5 Trains for line, origin station, and destination station
+        /// Retrieves train schedule
         /// </summary>
-        /// <param name="line">Target Line</param>
-        /// <param name="originStation">Origin Station</param>
-        /// <param name="destinationStation">Destination Station</param>
-        /// <returns>Batch of Trains</returns>
-        public static List<Train> GetNextTrainBatch(Line line, Station originStation, Station destinationStation)
+        /// <param name="line">Line Name (e.g. UP West)</param>
+        /// <param name="trainNum">Train Number</param>
+        /// <returns>Train Schedule</returns>
+        public static List<TrainSchedule> GetTrainSchedule(string line, int trainNum)
         {
-            return GetNextTrainBatch(line.Id, originStation.Id, destinationStation.Id);
-        }
-
-        /// <summary>
-        /// Gets Next 5 Trains for line, origin station, and destination station
-        /// </summary>
-        /// <param name="lineId">Target Line's Id (e.g. UP-W, UP-NW, etc)</param>
-        /// <param name="originStation">Origin Station</param>
-        /// <param name="destinationStation">Destination Station</param>
-        /// <returns>Batch of Trains</returns>
-        public static List<Train> GetNextTrainBatch(string lineId, Station originStation, Station destinationStation)
-        {
-            return GetNextTrainBatch(lineId, originStation.Id, destinationStation.Id);
-        }
-
-        /// <summary>
-        /// Gets Next 5 Trains for line, origin station, and destination station
-        /// </summary>
-        /// <param name="line">Target Line</param>
-        /// <param name="originStationId">Origin Station Id</param>
-        /// <param name="destinationStationId">Destination Station Id</param>
-        /// <returns></returns>
-        public static List<Train> GetNextTrainBatch(Line line, string originStationId, string destinationStationId)
-        {
-            return GetNextTrainBatch(line.Id, originStationId, destinationStationId);
-        }
-
-        /// <summary>
-        /// Gets Next 5 Trains for line, origin station, and destination station
-        /// </summary>
-        /// <param name="lineId">Target Line Id</param>
-        /// <param name="originStationId">Origin Station Id</param>
-        /// <param name="destinationStationId">Destination Station Id</param>
-        /// <returns></returns>
-        public static List<Train> GetNextTrainBatch(string lineId, string originStationId, string destinationStationId)
-        {
-            var url = GET_TRAIN_DATA_URL;
-
-            url = AddParamToUrl(url, "line", lineId);
-            url = AddParamToUrl(url, "origin", originStationId);
-            url = AddParamToUrl(url, "destination", destinationStationId);
+            var url = serviceUrl + "GetSchedules?";
+            url = AddParamToUrl(url, "TrainNumber", trainNum.ToString());
+            url = AddParamToUrl(url, "Corridor", line);
 
             var request = WebRequest.Create(url);
             var response = GetResponseData(request);
 
-            dynamic responseObj = JsonConvert.DeserializeObject(response);
+            dynamic resultObj = JsonConvert.DeserializeObject(response);
 
-            var trainBatch = new List<Train>();
+            return JsonConvert.DeserializeObject<List<TrainSchedule>>(resultObj["d"].Value);
+        }
 
-            foreach (var train in responseObj)
+        public static List<TrainSchedule> GetTrainSchedule(Line line, int trainNum)
+        {
+            if (String.IsNullOrEmpty(line.CorridorName))
             {
-                trainBatch.Add(new Train
-                {
-                    EstimatedArvTime = train.Value["estimated_arv_time"] ?? new DateTime(),
-                    EstimatedDptTime = train.Value["estimated_dpt_time"] ?? new DateTime(),
-                    HasData = train.Value["hasData"] ?? false,
-                    HasDelay = train.Value["hasDelay"] ?? false,
-                    IsRed = train.Value["isRed"] ?? false,
-                    NotDeparted = train.Value["notDeparted"] ?? false,
-                    ScheduledArvTime = train.Value["scheduled_arv_time"] ?? new DateTime(),
-                    ScheduledDptTime = train.Value["scheduled_dpt_time"] ?? new DateTime(),
-                    Status = train.Value["status"] ?? -1,
-                    Timestamp = train.Value["timestamp"] ?? 0,
-                    TrainNum = train.Value["train_num"] ?? 0,
-                    TripId = train.Value["trip_id"] ?? 0
-                });
+                throw new ArgumentException("Line CorridorName cannot be null or empty. Either populate it by hand or retrieve the line via the api");
             }
 
-            return trainBatch;
+            return GetTrainSchedule(line.CorridorName, trainNum);
         }
+
+        #region Helper Methods
 
         private static string AddParamToUrl(string url, string key, string value)
         {
             return url += key + "=" + value + "&";
+        }
+
+        private static WebRequest ConvertToPostRequest(WebRequest webRequest, object content, string contentType)
+        {
+            webRequest.Method = "POST";
+            webRequest.ContentType = contentType;
+            var byteArray = ObjectToJsonByteArray(content);
+            Stream dataStream = webRequest.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            return webRequest;
+        }
+
+        // Convert an object to a byte array
+        private static byte[] ObjectToJsonByteArray(Object obj)
+        {
+            var json = JsonConvert.SerializeObject(obj).Trim();
+
+            if (json == null)
+                return null;
+
+            byte[] bytes = new byte[json.Length * sizeof(char)];
+            System.Buffer.BlockCopy(json.ToCharArray(), 0, bytes, 0, bytes.Length);
+            return bytes;
         }
 
         private static string GetResponseData(WebRequest request)
@@ -217,5 +289,7 @@ namespace MetraAPI
 
             return responseFromServer;
         }
+
+        #endregion
     }
 }

@@ -12,40 +12,93 @@ namespace MetraAPI.Tests
     public class ApiIntegrationTests
     {
         [Test]
-        public void GetStationForLine_UPW_ReturnsUPWStops()
+        public void GetLines_AllLines_HasLinesNoStations()
         {
-            var stations = MetraAPI.GetStationsForLine("UP-W");
+            var lines = MetraAPI.GetLines();
 
-            Assert.That(stations.Count() > 0);
+            Assert.IsNotEmpty(lines);
+            Assert.That(lines.Count(l => l.Stations.Count > 0) == 0);
         }
 
         [Test]
-        public void UpdateAllStationsForAllLines_UpdatesAllStations()
+        public void GetLinesAndStations_AllLinesAndStations_HasLinesAndStations()
         {
-            LineHandler.UpdateAllStationsForAllLines();
+            var lines = MetraAPI.GetLinesAndStations();
 
-            var lines = LineHandler.GetAllLines();
-
+            Assert.IsNotEmpty(lines);
             foreach (var line in lines)
             {
-                Assert.That(line.Stations.Count > 0);
+                Assert.IsNotEmpty(line.Stations);
             }
         }
 
         [Test]
-        public void GetNextTrainBatch_UPW_VillaPark_OTC_Success()
+        public void GetAllTrainDelays_NoParams_HasDelays()
         {
-            var trainBatch = MetraAPI.GetNextTrainBatch("UP-W", "VILLAPARK", "OTC");
+            var delays = MetraAPI.GetAllTrainDelays();
 
-            Assert.IsNotEmpty(trainBatch);
+            Assert.IsNotEmpty(delays);
         }
 
         [Test]
-        public void GetLineAndStationIds_All_ReturnsLineAndStationIds()
+        public void GetTrainData_UPWVillaParkToOgilvyObjects_ReturnsTrainData()
         {
-            var linesAndStations = MetraAPI.GetLineAndStationIds();
+            var lines = MetraAPI.GetLinesAndStations();
 
-            Assert.IsNotEmpty(linesAndStations);
+            var upwLine = lines.Single(l => l.LookupName == "up-w");
+            var vpStation = upwLine.Stations.Single(s => s.Station == "VILLAPARK");
+            var ogilvyStation = upwLine.Stations.Single(s => s.Station == "OTC");
+
+            Assert.IsNotEmpty(MetraAPI.GetTrainData(upwLine, vpStation, ogilvyStation));
         }
+
+        [Test]
+        public void GetTrainData_UPWVillaParkToOgilvyStrings_ReturnsTrainData()
+        {
+            Assert.IsNotEmpty(MetraAPI.GetTrainData("up-w", "VILLAPARK", "OTC"));
+        }
+
+        [Test]
+        public void GetTrainNumbersForLine_UPW_ReturnsTrainNumbers()
+        {
+            Assert.IsNotEmpty(MetraAPI.GetTrainNumbersForLine("UP West"));
+        }
+
+        [Test]
+        public void GetTrainNumbersForLine_UPWLineObject_ReturnsTrainNumbers()
+        {
+            var lines = MetraAPI.GetLines();
+
+            var upwLine = lines.Single(l => l.LookupName == "up-w");
+
+            var trainNumbers = MetraAPI.GetTrainNumbersForLine(upwLine);
+
+            Assert.IsNotEmpty(trainNumbers);
+        }
+
+        [Test]
+        public void GetTrainSchedule_ValidTrainNumberStringLine_ReturnsSchedule()
+        {
+            var trainNumbers = MetraAPI.GetTrainNumbersForLine("UP West");
+
+            var trainSchedule = MetraAPI.GetTrainSchedule("UP West", trainNumbers[0]);
+
+            Assert.IsNotEmpty(trainSchedule);
+        }
+
+        [Test]
+        public void GetTrainSchedule_ValidTrainNumberObjectLine_ReturnsSchedule()
+        {
+            var lines = MetraAPI.GetLines();
+
+            var upwLine = lines.Single(l => l.LookupName == "up-w");
+
+            var trainNumbers = MetraAPI.GetTrainNumbersForLine(upwLine);
+
+            var trainSchedule = MetraAPI.GetTrainSchedule(upwLine, trainNumbers[0]);
+
+            Assert.IsNotEmpty(trainSchedule);
+        }
+
     }
 }
