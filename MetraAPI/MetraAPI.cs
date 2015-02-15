@@ -95,8 +95,8 @@ namespace MetraAPI
             delays = JsonConvert.DeserializeObject<List<TrainDelay>>(resultObj["d"].Value);
 
             // DateTimes are off by 6 hours
-            delays.ForEach(d => d.LastUpdate = d.LastUpdate.AddHours(-6));
-            delays.ForEach(d => d.Timestamp = d.Timestamp.AddHours(-6));
+            delays.ForEach(d => d.LastUpdate = d.LastUpdate);
+            delays.ForEach(d => d.Timestamp = d.Timestamp);
 
             return delays;
         }
@@ -148,10 +148,10 @@ namespace MetraAPI
                     {
                         DepartingStation = tData.Value["dpt_station"],
                         TrainNumber = tData.Value["train_num"],
-                        ScheduledDepartureTime = ((DateTime)tData.Value["scheduled_dpt_time"]).AddHours(-6),
-                        EstimatedDepartureTime = ((DateTime)tData.Value["estimated_dpt_time"]).AddHours(-6),
+                        ScheduledDepartureTime = ((DateTime)tData.Value["scheduled_dpt_time"]),
+                        EstimatedDepartureTime = ((DateTime)tData.Value["estimated_dpt_time"]),
                         IsModified = tData.Value["is_modified"],
-                        Timestamp = ((DateTime)tData.Value["timestamp"]).AddHours(-6),
+                        Timestamp = ((DateTime)tData.Value["timestamp"]),
                         DateAge = tData.Value["DateAge"],
                         IsDuplicate = tData.Value["is_duplicate"],
                         RunState = tData.Value["RunState"]
